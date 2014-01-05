@@ -20,7 +20,7 @@ class HeFetchUrl
 	
 	private $headers = array();
 	
-	private $postfields = "";
+	private $postfields = array();
 	
 	function __construct() {
 
@@ -131,7 +131,7 @@ class HeFetchUrl
 		foreach($this->headers as $key=>$value)
 			$temp_headers[] = $key . ": " . $value;
 		
-		var_dump($temp_headers);
+		//var_dump($temp_headers);
 		
 		$this->setopt(CURLOPT_HTTPHEADER, $temp_headers);
 	}
@@ -141,7 +141,8 @@ class HeFetchUrl
 		foreach($this->cookies as $key => $value)
 			$temp_cookies .= " " . $key . "=" . $value.";";
 		
-		var_dump($temp_cookies);
+		//echo "cookies: ";
+		//var_dump($temp_cookies);
 		
 		$this->setopt(CURLOPT_COOKIE, trim($temp_cookies));
 	}
@@ -150,7 +151,7 @@ class HeFetchUrl
 	 * 向curl_handle写入POST内容
 	 */
 	private function _write_postfields(){
-		var_dump($this->postfields);
+		//var_dump($this->postfields);
 		$this->setopt(CURLOPT_POSTFIELDS, http_build_query($this->postfields));
 	}
 	
@@ -187,13 +188,16 @@ class HeFetchUrl
 	 * @param 返回的内容  $response
 	 */
 	private function _analyse_cookies($response) {
-		$str = explode("\r\n\r\n", $response);
-		$str = $str[0];
-		
-		preg_match_all('/Set-Cookie: (.*?)=(.*?)(;|\r\n)/', $str, $matchs);
-		//print_r($matchs);
-		
-		$len = count($matchs[0]);
+		//$str = explode("\r\n\r\n", $response);
+		//$str = $str[0];
+		//echo $str;
+		$header = substr($response, 0, curl_getinfo($this->curl_handle, CURLINFO_HEADER_SIZE));
+		$len = preg_match_all('/Set-Cookie: (.*?)=(.*?)(;|\r\n)/', $header, $matchs);
+// 		echo "\r\n\r\nmatchs: ";
+// 		print_r($matchs);
+// 		echo "\r\n".curl_getinfo($this->curl_handle, CURLINFO_HEADER_SIZE)."\r\n";
+// 		echo substr($response, 0,curl_getinfo($this->curl_handle, CURLINFO_HEADER_SIZE));
+// 		echo "\r\n-----\r\n\r\n";
 		for($i=0; $i<$len; $i++)
 			$this->_set_cookie_key($matchs[1][$i], $matchs[2][$i]);
 	}
