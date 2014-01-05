@@ -125,7 +125,7 @@ class HeFetchUrl
 	
 	private function _write_headers() {
 		$this->headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-		$this->headers["Accept-Encoding"] = "gzip, deflate";
+		//$this->headers["Accept-Encoding"] = "gzip, deflate";
 		$this->headers["Connection"] = "keep-alive";
 		$temp_headers = array();
 		foreach($this->headers as $key=>$value)
