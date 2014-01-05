@@ -6,7 +6,7 @@
  */
 
 /**
- * @desc 抓去类
+ * @desc 抓取类
  */
 class HeFetchUrl
 {
@@ -51,6 +51,15 @@ class HeFetchUrl
 	}
 	
 	
+	/**
+	 * @desc 设置用户cookies
+	 * @param 保存cookies的数组  $cookies_array
+	 */
+	function set_cookies($cookies_array) {
+		foreach($cookies_array as $key => $value)
+			$this->_set_cookie_key($key, $value);
+	}
+	
 	
 	function init() {
 		if(!empty($this->curl_handle))
@@ -82,7 +91,7 @@ class HeFetchUrl
 	 * 执行curl_exec
 	 * @return 返回获取的内容
 	 */
-	private function _exec($url, $method="GET"){
+	private function _exec($url, $method='GET'){
 		$this->setopt(CURLOPT_URL, $url);
 		
 		$this->_write_headers();
@@ -91,7 +100,8 @@ class HeFetchUrl
 		if($method=='POST') {
 			$this->setopt(CURLOPT_POST, true);
 			$this->_write_postfields();
-		}
+		}else
+			$this->setopt(CURLOPT_POST, false);
 		
 		$response = curl_exec($this->curl_handle);
 		$this->_analyse_cookies($response);
@@ -105,7 +115,8 @@ class HeFetchUrl
 	 * @param array $post_data
 	 */
 	function set_post_data($post_data) {
-		array_push($this->postfields, $post_data);
+		foreach ($post_data as $name => $value)
+			$this->postfields[$name] = $value;
 	}
 	
 	function close() {
@@ -117,21 +128,29 @@ class HeFetchUrl
 		$this->headers["Accept-Encoding"] = "gzip, deflate";
 		$this->headers["Connection"] = "keep-alive";
 		$temp_headers = array();
-		foreach($temp_headers as $key=>$value)
+		foreach($this->headers as $key=>$value)
 			$temp_headers[] = $key . ": " . $value;
-	
+		
+		var_dump($temp_headers);
+		
 		$this->setopt(CURLOPT_HTTPHEADER, $temp_headers);
 	}
 	
 	private function _write_cookies() {
 		$temp_cookies  = "";
 		foreach($this->cookies as $key => $value)
-			$temp_cookies .= " " . $key . "=" . $value;
+			$temp_cookies .= " " . $key . "=" . $value.";";
+		
+		var_dump($temp_cookies);
 		
 		$this->setopt(CURLOPT_COOKIE, trim($temp_cookies));
 	}
 	
+	/**
+	 * 向curl_handle写入POST内容
+	 */
 	private function _write_postfields(){
+		var_dump($this->postfields);
 		$this->setopt(CURLOPT_POSTFIELDS, http_build_query($this->postfields));
 	}
 	
@@ -142,11 +161,18 @@ class HeFetchUrl
 	function get_cookies() {
 		return $this->cookies;
 	}
+	/**
+	 * 获取返回的http code
+	 * @return 返回的HTTP CODE 数组
+	 */
+	public function get_http_code(){
+		return curl_getinfo($this->curl_handle, CURLINFO_HTTP_CODE);
+	}
 	
 	/**
 	 * 设置cookies的值
-	 * @param unknown $key
-	 * @param unknown $value
+	 * @param key $key
+	 * @param value $value
 	 */
 	private function _set_cookie_key($key, $value) {
 		$this->cookies[$key] = $value;
@@ -164,7 +190,7 @@ class HeFetchUrl
 		$str = explode("\r\n\r\n", $response);
 		$str = $str[0];
 		
-		preg_match_all('/Set-Cookie: (.*?)=(.*?)[;\n]/', $str, $matchs);
+		preg_match_all('/Set-Cookie: (.*?)=(.*?)(;|\r\n)/', $str, $matchs);
 		//print_r($matchs);
 		
 		$len = count($matchs[0]);
