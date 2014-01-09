@@ -1,12 +1,12 @@
 <?php
 /**
- * @desc ÓÃÓÚÔÚSAE£¬BAEµÈ»·¾³ÖĞ×¥È¥Êı¾İ£¬¿ÉÒÔÄ£ÄâµÇÂ¼£¬Ö§³Öcookies
+ * @desc ç”¨äºåœ¨SAEï¼ŒBAEç­‰ç¯å¢ƒä¸­æŠ“å»æ•°æ®ï¼Œå¯ä»¥æ¨¡æ‹Ÿç™»å½•ï¼Œæ”¯æŒcookies
  * @author   heimonsy(heimonsy@gmail.com)
  * @version  1.0.1
  */
 
 /**
- * @desc ×¥È¡Àà
+ * @desc æŠ“å–ç±»
  */
 class HeFetchUrl
 {
@@ -25,7 +25,7 @@ class HeFetchUrl
 	function __construct() {
 
 		$this->init();
-		//ÉèÖÃÄ¬ÈÏµÄÑ¡Ïî
+		//è®¾ç½®é»˜è®¤çš„é€‰é¡¹
 		$this->setopt(CURLOPT_FILETIME, true);
 		$this->setopt(CURLOPT_FRESH_CONNECT, false);
 		$this->setopt(CURLOPT_SSL_VERIFYPEER, false);
@@ -42,9 +42,9 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * @desc ÉèÖÃÑ¡Ïî
-	 * @param CURLÑ¡Ïî $option
-	 * @param Ñ¡ÏîµÄÖµ     $value
+	 * @desc è®¾ç½®é€‰é¡¹
+	 * @param CURLé€‰é¡¹ $option
+	 * @param é€‰é¡¹çš„å€¼     $value
 	 */
 	function setopt($option, $value) {
 		curl_setopt($this->curl_handle, $option, $value);
@@ -52,8 +52,8 @@ class HeFetchUrl
 	
 	
 	/**
-	 * @desc ÉèÖÃÓÃ»§cookies
-	 * @param ±£´æcookiesµÄÊı×é  $cookies_array
+	 * @desc è®¾ç½®ç”¨æˆ·cookies
+	 * @param ä¿å­˜cookiesçš„æ•°ç»„  $cookies_array
 	 */
 	function set_cookies($cookies_array) {
 		foreach($cookies_array as $key => $value)
@@ -68,9 +68,9 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * GETÒ»¸öURL
-	 * @param Òª»ñÈ¡URLÒ³Ãæ  $url
-	 * @return ·µ»ØÒ³ÃæÄÚÈİ
+	 * GETä¸€ä¸ªURL
+	 * @param è¦è·å–URLé¡µé¢  $url
+	 * @return è¿”å›é¡µé¢å†…å®¹
 	 */
 	function get($url) {
 		$response = $this->_exec($url, "GET");
@@ -78,9 +78,9 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * POSTÒ»¸öURL
-	 * @param Òª»ñÈ¡URLÒ³Ãæ  $url
-	 * @return ·µ»ØÒ³ÃæÄÚÈİ
+	 * POSTä¸€ä¸ªURL
+	 * @param è¦è·å–URLé¡µé¢  $url
+	 * @return è¿”å›é¡µé¢å†…å®¹
 	 */
 	function post($url) {
 		$response = $this->_exec($url, "POST");
@@ -88,8 +88,8 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * Ö´ĞĞcurl_exec
-	 * @return ·µ»Ø»ñÈ¡µÄÄÚÈİ
+	 * æ‰§è¡Œcurl_exec
+	 * @return è¿”å›è·å–çš„å†…å®¹
 	 */
 	private function _exec($url, $method='GET'){
 		$this->setopt(CURLOPT_URL, $url);
@@ -104,14 +104,21 @@ class HeFetchUrl
 			$this->setopt(CURLOPT_POST, false);
 		
 		$response = curl_exec($this->curl_handle);
-		$this->_analyse_cookies($response);
+		
+		$code = curl_getinfo($this->curl_handle, CURLINFO_HTTP_CODE);
+		if($code==302 ||$code==301 ){
+			if(preg_match('/Location: (.*)\r\n/', $response, $matchs)){
+				$response = $this->_exec($matchs[1], $method);
+			}
+		}else
+			$this->_analyse_cookies($response);
 		return $response;
 	}
 	
 	
 	
 	/**
-	 * ÉèÖÃĞèÒªpostµÄÊı¾İ
+	 * è®¾ç½®éœ€è¦postçš„æ•°æ®
 	 * @param array $post_data
 	 */
 	function set_post_data($post_data) {
@@ -148,7 +155,7 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * Ïòcurl_handleĞ´ÈëPOSTÄÚÈİ
+	 * å‘curl_handleå†™å…¥POSTå†…å®¹
 	 */
 	private function _write_postfields(){
 		//var_dump($this->postfields);
@@ -156,22 +163,22 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * »ñÈ¡cookiesÊı×é
+	 * è·å–cookiesæ•°ç»„
 	 * @return multitype:
 	 */
 	function get_cookies() {
 		return $this->cookies;
 	}
 	/**
-	 * »ñÈ¡·µ»ØµÄhttp code
-	 * @return ·µ»ØµÄHTTP CODE Êı×é
+	 * è·å–è¿”å›çš„http code
+	 * @return è¿”å›çš„HTTP CODE æ•°ç»„
 	 */
 	public function get_http_code(){
 		return curl_getinfo($this->curl_handle, CURLINFO_HTTP_CODE);
 	}
 	
 	/**
-	 * ÉèÖÃcookiesµÄÖµ
+	 * è®¾ç½®cookiesçš„å€¼
 	 * @param key $key
 	 * @param value $value
 	 */
@@ -184,8 +191,8 @@ class HeFetchUrl
 	}
 	
 	/**
-	 * ·ÖÎö·µ»ØheaderÖĞµÄcookies
-	 * @param ·µ»ØµÄÄÚÈİ  $response
+	 * åˆ†æè¿”å›headerä¸­çš„cookies
+	 * @param è¿”å›çš„å†…å®¹  $response
 	 */
 	private function _analyse_cookies($response) {
 		//$str = explode("\r\n\r\n", $response);
